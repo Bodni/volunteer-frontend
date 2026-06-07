@@ -1,0 +1,249 @@
+:root{
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --text: #0F172A;
+  --muted: #64748B;
+  --border: #E2E8F0;
+
+  --primary: #F59E0B;
+  --primary-dark: #D97706;
+
+  --danger: #EF4444;
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+
+  --radius: 14px;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+a{ color: inherit; text-decoration: none; }
+a:hover{ text-decoration: underline; }
+
+.container{
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.btn{
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.btn-primary{
+  background: var(--primary);
+  color: #111827;
+}
+.btn-primary:hover{ background: var(--primary-dark); }
+.btn-primary:disabled{ opacity: .6; cursor: not-allowed; }
+
+.input{
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+  font-size: 14px;
+  background: #fff;
+}
+
+.input:focus{
+  border-color: rgba(245, 158, 11, 0.7);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+}
+
+.label{
+  display:flex;
+  flex-direction:column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.alert{
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.alert-danger{
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: var(--danger);
+}
+
+@media (max-width: 768px){
+  .container{
+    padding-left:14px;
+    padding-right:14px;
+  }
+
+  .btn{
+    min-height:42px;
+    padding:10px 12px;
+  }
+
+  .input{
+    min-height:42px;
+    font-size:14px;
+  }
+}
+
+@media (max-width: 480px){
+  .container{
+    padding-left:12px;
+    padding-right:12px;
+  }
+}
+
+/* Чтобы длинные слова/тексты не ломали карточки */
+.card,
+.item,
+.admin-card,
+.news-card,
+.task-card,
+.animal-card{
+  min-width:0;
+}
+
+.card *,
+.item *,
+.admin-card *,
+.news-card *,
+.task-card *,
+.animal-card *{
+  min-width:0;
+}
+
+/* Таблицы/длинные списки не должны ломать экран */
+.list,
+.grid{
+  min-width:0;
+}
+
+/* Красивый скролл для горизонтальных вкладок */
+.tabs{
+  scrollbar-width:none;
+}
+
+.tabs::-webkit-scrollbar{
+  display:none;
+}
+
+/* Общая защита изображений от растягивания */
+img{
+  max-width:100%;
+}
+
+.animal-card img,
+.news-card img,
+.reward-card img,
+.task-card img,
+.admin-card img,
+.item img{
+  object-fit:cover;
+}
+
+.pagination{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
+
+.page-btn{
+  min-width:38px;
+  min-height:38px;
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:12px;
+  padding:8px 12px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.page-btn:hover{
+  border-color:rgba(245,158,11,.6);
+}
+
+.page-btn.active{
+  background:var(--primary);
+  border-color:var(--primary);
+  color:#111827;
+}
+
+.page-btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 9999;
+  max-width: 360px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.toast.success {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.toast.error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.toast.info {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.confirm-card {
+  width: min(440px, 100%);
+  background: #fff;
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}

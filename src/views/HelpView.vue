@@ -20,7 +20,24 @@ function asList(payload) {
   return []
 }
 
-const tab = ref('help') // help | tasks | forms
+const tab = ref('help')// help | tasks | forms
+
+function applyRouteQuery() {
+  if (['help', 'tasks', 'forms'].includes(String(route.query.tab))) {
+    tab.value = String(route.query.tab)
+  }
+
+  const a = route.query.animal
+
+  if (a && animalOptions.value.includes(String(a))) {
+    adoptAnimal.value = String(a)
+  } else if (a) {
+    notify('На это животное уже нельзя подать заявку', 'info')
+    adoptAnimal.value = animalOptions.value[0] || ''
+  } else if (!adoptAnimal.value && animalOptions.value.length) {
+    adoptAnimal.value = animalOptions.value[0]
+  }
+}
 
 const tabInfo = computed(() => {
   if (tab.value === 'help') {
@@ -244,15 +261,7 @@ onMounted(async () => {
 
   const a = route.query.animal
 
-if (a && animalOptions.value.includes(String(a))) {
-  adoptAnimal.value = String(a)
-} else if (a) {
-  notify('На это животное уже нельзя подать заявку', 'info')
-  adoptAnimal.value = animalOptions.value[0] || ''
-} else if (!adoptAnimal.value && animalOptions.value.length) {
-  adoptAnimal.value = animalOptions.value[0]
-}
-
+applyRouteQuery()
   try {
   tasks.value = asList(await getTasks())
 } catch (e) {
@@ -261,20 +270,23 @@ if (a && animalOptions.value.includes(String(a))) {
 })
 
 async function sendAdopt() {
-  if (!adoptAnimal.value.trim() || !adoptName.value.trim() || !adoptPhone.value.trim()) {
+  const animalName = adoptAnimal.value.trim()
+
+  if (!animalName || !adoptName.value.trim() || !adoptPhone.value.trim()) {
     notify('Заполни: животное, имя, телефон')
     return
   }
 
-  if (!animalOptions.value.includes(adoptAnimal.value.trim())) {
-  notify('На это животное уже нельзя подать заявку', 'error')
-  return
+  if (!animalOptions.value.includes(animalName)) {
+    notify('На это животное уже нельзя подать заявку', 'error')
+    return
+  }
 
   adoptLoading.value = true
 
   try {
     await createAdoptionRequest({
-      animal_name: adoptAnimal.value.trim(),
+      animal_name: animalName,
       name: adoptName.value.trim(),
       phone: adoptPhone.value.trim(),
       message: adoptMessage.value.trim(),
@@ -283,14 +295,17 @@ async function sendAdopt() {
     adoptName.value = ''
     adoptPhone.value = ''
     adoptMessage.value = ''
-    showSuccess('Заявка отправлена', 'Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.')
+
+    showSuccess(
+      'Заявка отправлена',
+      'Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.'
+    )
   } catch (e) {
     console.error(e)
-    notify('Не удалось отправить заявку')
+    notify(e?.response?.data?.message || 'Не удалось отправить заявку')
   } finally {
     adoptLoading.value = false
   }
-}
 }
 
 const foundPhotoFile = ref(null)
@@ -412,7 +427,7 @@ const tasks = ref([])
       <div v-else class="tasks">
   <article v-for="t in paginatedTasks" :key="t.id" class="task task-card">
     <div class="task-media">
-      <img
+      <BaseImg
         v-if="getMediaUrl(t.photo)"
         class="task-photo"
         :src="getMediaUrl(t.photo)"

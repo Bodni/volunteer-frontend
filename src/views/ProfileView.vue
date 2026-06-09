@@ -156,6 +156,7 @@ const progressPct = computed(() => {
 async function loadRewardOrders() {
   try {
     const data = await getRewardOrders({ page: 1, per_page: 20 })
+
     rewardOrders.value = asList(data)
   } catch (e) {
     console.error('Не удалось загрузить обмены наград:', e)
@@ -188,9 +189,9 @@ function getImageUrl(path) {
   const normalized = value.startsWith('/') ? value : `/${value}`
   return `${apiOrigin}${normalized}`
 }
-onMounted(() => {
-  loadProfile()
-  loadRewardOrders()
+onMounted(async () => {
+  await loadProfile()
+  await loadRewardOrders()
 })
 </script>
 
@@ -205,7 +206,7 @@ onMounted(() => {
       <div class="pill">
         <div class="row">
           <div class="ava">
-            <img v-if="getImageUrl(me.avatar)" :src="getImageUrl(me.avatar)" alt="avatar" />
+            <BaseImg v-if="getImageUrl(me.avatar)" :src="getImageUrl(me.avatar)" alt="avatar" />
             <div v-else class="ava-ph"></div>
           </div>
 

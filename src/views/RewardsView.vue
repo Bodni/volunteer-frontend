@@ -185,7 +185,7 @@ onMounted(loadAll)
       <div v-else class="grid">
         <article v-for="reward in paginatedRewards" :key="reward.id" class="reward-card">
           <div class="reward-media">
-            <img
+            <BaseImg
               v-if="getRewardImage(reward.image)"
               :src="getRewardImage(reward.image)"
               :alt="reward.title"

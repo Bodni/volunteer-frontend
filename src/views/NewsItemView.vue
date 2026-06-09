@@ -39,7 +39,7 @@ function formatNewsDate(value) {
     <div v-if="loading" class="muted">Загрузка...</div>
 
     <article v-else-if="item" class="news-article">
-      <img v-if="item.image" :src="item.image" :alt="item.title" class="hero-image" />
+      <BaseImg v-if="item.image" :src="item.image" :alt="item.title" class="hero-image" />
       <h1>{{ item.title }}</h1>
       <div class="muted">{{ formatNewsDate(item.published_at) }}</div>
       <div class="text">{{ item.text }}</div>

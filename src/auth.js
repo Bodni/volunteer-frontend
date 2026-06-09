@@ -23,13 +23,14 @@ export async function forgotPassword(email) {
   return data
 }
 
-export async function resetPassword(token, password, confirmPassword, email) {
+export async function resetPassword(email, code, password, confirmPassword) {
   const { data } = await api.post('/auth/reset-password', {
-    token,
+    email,
+    code,
     password,
     confirmPassword,
-    email,
   })
+
   return data
 }
 

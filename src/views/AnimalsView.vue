@@ -119,7 +119,7 @@ onMounted(() => loadAnimals(1))
     <div v-else class="grid">
       <article  v-for="a in paginatedAnimals" :key="a.id" class="card">
         <RouterLink :to="`/animals/${a.id}`" class="media-link">
-          <img
+          <BaseImg
             v-if="getAnimalImage(a.photo)"
             :src="getAnimalImage(a.photo)"
             :alt="a.name"
@@ -159,7 +159,7 @@ onMounted(() => loadAnimals(1))
   <RouterLink
   v-if="a.status !== 'adopted'"
   class="action-btn action-btn-secondary"
-  :to="`/help?animal=${encodeURIComponent(a.name)}`"
+  :to="`/help?tab=forms&animal=${encodeURIComponent(a.name)}`"
 >
   Подать заявку
 </RouterLink>
@@ -284,6 +284,7 @@ onMounted(() => loadAnimals(1))
 .media-link {
   display: block;
   text-decoration: none;
+  overflow: hidden;
 }
 
 .photo {
@@ -291,8 +292,14 @@ onMounted(() => loadAnimals(1))
   height: 230px;
   object-fit: cover;
   display: block;
+  object-position: center center;
+  border-radius: 24px 24px 0 0;
   background: linear-gradient(180deg, rgba(245, 158, 11, 0.08), rgba(15, 23, 42, 0.04));
   transition: transform 0.35s ease;
+}
+
+.photo-fallback {
+  border-radius: 18px;
 }
 
 .card:hover .photo {
@@ -620,6 +627,50 @@ onMounted(() => loadAnimals(1))
 @media (max-width: 390px){
   .animal-media{
     height:220px;
+  }
+}
+
+@media (max-width: 680px) {
+  .animals-page {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .hero {
+    align-items: stretch;
+  }
+
+  .filter-box {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .photo {
+    height: 220px;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .card-body {
+    padding: 14px;
+  }
+
+  .card-top {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .photo {
+    height: 200px;
+  }
+
+  .name {
+    font-size: 22px;
+  }
+
+  .badge {
+    font-size: 11px;
+    padding: 6px 8px;
   }
 }
 </style>

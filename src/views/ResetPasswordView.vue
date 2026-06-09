@@ -1,131 +1,231 @@
+<template>
+  <main class="auth-page">
+    <section class="auth-card">
+      <h1>Восстановление пароля</h1>
+
+      <p class="auth-text">
+        Введите email, получите код подтверждения и задайте новый пароль.
+      </p>
+
+      <form class="auth-form" @submit.prevent="sendCode">
+        <label>
+          Email
+          <input
+            v-model.trim="email"
+            type="email"
+            required
+            placeholder="Введите email"
+          />
+        </label>
+
+        <button type="submit" :disabled="codeLoading">
+          {{ codeLoading ? 'Отправляем...' : 'Получить код' }}
+        </button>
+      </form>
+
+      <form class="auth-form" @submit.prevent="changePassword">
+        <label>
+          Код из письма
+          <input
+            v-model.trim="code"
+            type="text"
+            required
+            maxlength="6"
+            placeholder="Например 123456"
+          />
+        </label>
+
+        <label>
+          Новый пароль
+          <input
+            v-model="password"
+            type="password"
+            required
+            minlength="8"
+            placeholder="Минимум 8 символов"
+          />
+        </label>
+
+        <label>
+          Повторите пароль
+          <input
+            v-model="confirmPassword"
+            type="password"
+            required
+            minlength="8"
+            placeholder="Повторите пароль"
+          />
+        </label>
+
+        <button type="submit" :disabled="resetLoading">
+          {{ resetLoading ? 'Сохраняем...' : 'Изменить пароль' }}
+        </button>
+      </form>
+
+      <p v-if="message" class="message success">{{ message }}</p>
+      <p v-if="error" class="message error">{{ error }}</p>
+    </section>
+  </main>
+</template>
+
 <script setup>
-import { reactive } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from 'vue'
+import { forgotPassword, resetPassword } from '../auth'
 
-const route = useRoute()
-const router = useRouter()
+const email = ref('')
+const code = ref('')
+const password = ref('')
+const confirmPassword = ref('')
 
-const form = reactive({
-  password: '',
-  confirmPassword: ''
-})
+const codeLoading = ref(false)
+const resetLoading = ref(false)
 
-const state = reactive({
-  loading: false,
-  error: '',
-  success: ''
-})
+const message = ref('')
+const error = ref('')
 
-function validatePassword(password) {
-  return (
-    password.length >= 8 &&
-    /[A-ZА-ЯЁ]/.test(password) &&
-    /[a-zа-яё]/.test(password) &&
-    /\d/.test(password) &&
-    /[!@#$%^&*()_\-+=[\]{};:'"\\|,.<>/?]/.test(password)
-  )
-}
+async function sendCode() {
+  message.value = ''
+  error.value = ''
 
-async function resetPassword() {
-  state.error = ''
-  state.success = ''
-
-  if (!form.password || !form.confirmPassword) {
-    state.error = 'Заполните все поля'
+  if (!email.value) {
+    error.value = 'Введите email'
     return
   }
 
-  if (form.password !== form.confirmPassword) {
-    state.error = 'Пароли не совпадают'
-    return
-  }
-
-  if (!validatePassword(form.password)) {
-    state.error = 'Пароль должен содержать 8+ символов, заглавную, строчную букву, цифру и спецсимвол'
-    return
-  }
+  codeLoading.value = true
 
   try {
-    state.loading = true
+    const data = await forgotPassword(email.value)
 
-    const res = await fetch('http://localhost:3000/auth/reset-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token: route.params.token,
-        password: form.password,
-        confirmPassword: form.confirmPassword
-      })
-    })
-
-    const data = await res.json()
-
-    if (!res.ok) {
-      state.error = data.message || 'Ошибка сброса пароля'
-      return
-    }
-
-    state.success = 'Пароль успешно изменён'
-
-    setTimeout(() => {
-      router.push('/login')
-    }, 1500)
+    message.value = data.message || 'Код отправлен на email'
   } catch (e) {
-    state.error = 'Ошибка соединения с сервером'
+    error.value = e?.response?.data?.message || 'Не удалось отправить код'
   } finally {
-    state.loading = false
+    codeLoading.value = false
+  }
+}
+
+async function changePassword() {
+  message.value = ''
+  error.value = ''
+
+  if (!email.value || !code.value || !password.value || !confirmPassword.value) {
+    error.value = 'Заполните все поля'
+    return
+  }
+
+  if (password.value !== confirmPassword.value) {
+    error.value = 'Пароли не совпадают'
+    return
+  }
+
+  resetLoading.value = true
+
+  try {
+    const data = await resetPassword(
+      email.value,
+      code.value,
+      password.value,
+      confirmPassword.value
+    )
+
+    message.value = data.message || 'Пароль успешно изменён'
+
+    code.value = ''
+    password.value = ''
+    confirmPassword.value = ''
+  } catch (e) {
+    error.value = e?.response?.data?.message || 'Не удалось изменить пароль'
+  } finally {
+    resetLoading.value = false
   }
 }
 </script>
 
-<template>
-  <div class="container">
-    <div class="auth-card" style="max-width: 500px; margin: 40px auto;">
-      <h1 class="auth-title">Сброс пароля</h1>
-
-      <div class="auth-form">
-        <label class="label">
-          Новый пароль
-          <input v-model="form.password" type="password" class="input" />
-        </label>
-
-        <label class="label">
-          Подтверждение пароля
-          <input v-model="form.confirmPassword" type="password" class="input" />
-        </label>
-
-        <div v-if="state.error" class="auth-error">{{ state.error }}</div>
-        <div v-if="state.success" class="auth-success">{{ state.success }}</div>
-
-        <button class="btn btn-primary auth-btn" @click="resetPassword" :disabled="state.loading">
-          {{ state.loading ? 'Сохранение...' : 'Сменить пароль' }}
-        </button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <style scoped>
-.auth-form {
+.auth-page {
+  min-height: calc(100vh - 80px);
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
 }
-.auth-error {
-  color: #b91c1c;
-  background: rgba(239,68,68,.08);
-  border: 1px solid rgba(239,68,68,.25);
-  border-radius: 12px;
-  padding: 10px 12px;
-}
-.auth-success {
-  color: #166534;
-  background: rgba(34,197,94,.08);
-  border: 1px solid rgba(34,197,94,.25);
-  border-radius: 12px;
-  padding: 10px 12px;
-}
-.auth-btn {
+
+.auth-card {
   width: 100%;
+  max-width: 460px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 18px 45px rgba(31, 41, 55, 0.12);
+}
+
+.auth-card h1 {
+  margin: 0 0 12px;
+  font-size: 28px;
+}
+
+.auth-text {
+  margin: 0 0 22px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 7px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.auth-form input {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 15px;
+  outline: none;
+}
+
+.auth-form input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.auth-form button {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: #f97316;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.auth-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.message {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.success {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.error {
+  background: #fff1f3;
+  color: #b42318;
 }
 </style>

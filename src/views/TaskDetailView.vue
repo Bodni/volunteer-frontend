@@ -135,7 +135,7 @@ watch(() => route.params.id, loadTask)
 
     <article v-else-if="task" class="task-card">
       <div class="task-media">
-        <img v-if="photoUrl" :src="photoUrl" :alt="task.title" class="task-photo" />
+        <BaseImg v-if="photoUrl" :src="photoUrl" :alt="task.title" class="task-photo" />
         <div v-else class="task-photo fallback">📋</div>
       </div>
 

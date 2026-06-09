@@ -59,7 +59,7 @@ watch(() => route.params.id, loadAnimal)
 
     <article v-else-if="animal" class="detail-card">
       <div class="detail-media-wrap">
-        <img v-if="photoUrl" :src="photoUrl" :alt="animal.name" class="detail-image" />
+        <BaseImg v-if="photoUrl" :src="photoUrl" :alt="animal.name" class="detail-image" />
         <div v-else class="detail-image detail-image-fallback">🐾</div>
       </div>
 

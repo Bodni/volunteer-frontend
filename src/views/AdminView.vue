@@ -19,7 +19,7 @@ import {
   updateDonation,
   deleteDonation,
 } from "../services/donations";
-import '../assets/admin.css'
+import "../assets/admin.css";
 const currentAdminTabLabel = computed(() => {
   const item = tabs.find((item) => item.key === tab.value);
   return item?.label || "Раздел";
@@ -597,59 +597,78 @@ async function loadCurrentUser() {
 }
 
 async function loadTabData(tabName) {
-  loading.value = true;
-  error.value = "";
+  error.value = ""
+
+  const alreadyLoaded =
+    (tabName === "users" && loadedTabs.users) ||
+    (tabName === "animals" && loadedTabs.animals) ||
+    (tabName === "tasks" && loadedTabs.tasks) ||
+    (tabName === "found" && loadedTabs.found) ||
+    (tabName === "adoption" && loadedTabs.adoption) ||
+    (tabName === "news" && loadedTabs.news) ||
+    (tabName === "donations" && loadedTabs.donations) ||
+    (tabName === "rewards" && loadedTabs.rewards) ||
+    (tabName === "reward-orders" && loadedTabs.orders)
+
+  if (alreadyLoaded) {
+    return
+  }
+
+  loading.value = true
 
   try {
-    if (tabName === "users" && !loadedTabs.users) {
-      await loadUsersData();
-      loadedTabs.users = true;
+    if (tabName === "users") {
+      await loadUsersData()
+      loadedTabs.users = true
     }
 
-    if (tabName === "animals" && !loadedTabs.animals) {
-      await loadAnimals();
-      loadedTabs.animals = true;
+    if (tabName === "animals") {
+      await loadAnimals()
+      loadedTabs.animals = true
     }
 
-    if (tabName === "tasks" && !loadedTabs.tasks) {
-      await loadTasks();
-      loadedTabs.tasks = true;
+    if (tabName === "tasks") {
+      await loadTasks()
+      loadedTabs.tasks = true
     }
 
-    if (tabName === "found" && !loadedTabs.found) {
-      await loadFoundRequests();
-      loadedTabs.found = true;
+    if (tabName === "found") {
+      await loadFoundRequests()
+      loadedTabs.found = true
     }
 
-    if (tabName === "adoption" && !loadedTabs.adoption) {
-      await loadAdoptionRequests();
-      loadedTabs.adoption = true;
+    if (tabName === "adoption") {
+      await loadAdoptionRequests()
+      loadedTabs.adoption = true
     }
 
-    if (tabName === "news" && !loadedTabs.news) {
-      await loadNews();
-      loadedTabs.news = true;
+    if (tabName === "news") {
+      await loadNews()
+      loadedTabs.news = true
     }
 
-    if (tabName === "donations" && !loadedTabs.donations) {
-      await loadDonations();
-      loadedTabs.donations = true;
+    if (tabName === "donations") {
+      await loadDonations()
+      loadedTabs.donations = true
     }
 
-    if (tabName === "rewards" && !loadedTabs.rewards) {
-      await loadRewards();
-      loadedTabs.rewards = true;
+    if (tabName === "rewards") {
+      await loadRewards()
+      loadedTabs.rewards = true
     }
 
-    if (tabName === "orders" && !loadedTabs.orders) {
-      await loadRewardOrders();
-      loadedTabs.orders = true;
+    if (tabName === "reward-orders") {
+      await loadRewardOrders()
+      loadedTabs.orders = true
     }
   } catch (e) {
-    console.error(e);
-    error.value = "Не удалось загрузить раздел.";
+    console.error(e)
+    error.value =
+      e?.response?.data?.message ||
+      e?.response?.data?.error ||
+      "Не удалось загрузить раздел."
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
@@ -1041,14 +1060,15 @@ const rewardForm = reactive({
   title: "",
   partner_name: "",
   description: "",
+  image: "",
   price_points: 0,
   stock: 0,
   category: "other",
   is_active: true,
 });
-
 const requestStatusText = {
   new: "Новая",
+  approved: "Подтверждена",
   in_progress: "В работе",
   done: "Выполнена",
   rejected: "Отклонена",
@@ -1056,12 +1076,12 @@ const requestStatusText = {
 
 function requestStatusClass(status) {
   if (status === "new") return "info";
+  if (status === "approved") return "ok";
   if (status === "in_progress") return "warn";
   if (status === "done") return "ok";
   if (status === "rejected") return "danger-soft";
   return "info";
 }
-
 async function loadNews() {
   news.value = asList(await getNews());
 }
@@ -1176,12 +1196,25 @@ function resetNewsForm() {
 }
 
 async function loadRewards() {
-  const { data } = await api.get("/rewards");
-  rewards.value = asList(data);
+  const { data } = await api.get("/rewards", {
+    params: {
+      page: 1,
+      per_page: 30,
+    },
+  })
+
+  rewards.value = asList(data)
 }
 
 async function loadRewardOrders() {
-  const { data } = await api.get("/reward-orders");
+  const { data } = await api.get("/reward-orders", {
+    params: {
+      page: 1,
+      per_page: 100,
+      all: 1,
+    },
+  });
+
   rewardOrders.value = asList(data);
 }
 
@@ -1241,6 +1274,28 @@ async function handleCreateReward() {
   }
 }
 
+async function handleChangeRewardStock(reward, diff) {
+  const newStock = Math.max(0, Number(reward.stock || 0) + diff)
+
+  try {
+    await api.put(`/rewards/${reward.id}`, {
+      title: reward.title,
+      partner_name: reward.partner_name || "",
+      description: reward.description || "",
+      price_points: Number(reward.price_points || 0),
+      stock: newStock,
+      category: reward.category || "other",
+      is_active: Boolean(reward.is_active),
+    })
+
+    reward.stock = newStock
+    notify("Количество подарков обновлено", "success")
+  } catch (e) {
+    console.error(e)
+    notify(e?.response?.data?.message || "Не удалось изменить количество", "error")
+  }
+}
+
 async function handleDeleteReward(reward) {
   const confirmed = await askConfirm(`Удалить награду "${reward.title}"?`);
   if (!confirmed) return;
@@ -1267,6 +1322,27 @@ async function handleRewardOrderStatus(order, status) {
   } catch (e) {
     console.error(e);
     notify(e?.response?.data?.message || "Не удалось обновить статус обмена");
+  }
+}
+
+async function handleDeleteRewardOrder(order) {
+  const confirmed = await askConfirm(`Удалить заявку на обмен #${order.id}?`);
+
+  if (!confirmed) return;
+
+  try {
+    await api.delete(`/reward-orders/${order.id}`);
+
+    await loadRewardOrders();
+
+    notify("Заявка на обмен удалена", "success");
+  } catch (e) {
+    console.error(e);
+
+    notify(
+      e?.response?.data?.message || "Не удалось удалить заявку на обмен",
+      "error",
+    );
   }
 }
 getNews({ page: 1, per_page: 10 });
@@ -2438,14 +2514,15 @@ onMounted(async () => {
                 v-model="rewardForm.price_points"
               />
             </label>
-
-            <label class="label"
-              >Остаток
+            <label class="label">
+              Количество подарков
               <input
                 class="input"
                 type="number"
                 min="0"
-                v-model="rewardForm.stock"
+                step="1"
+                v-model.number="rewardForm.stock"
+                placeholder="Например 10"
               />
             </label>
 
@@ -2541,7 +2618,27 @@ onMounted(async () => {
               <span class="badge" :class="reward.is_active ? 'ok' : 'warn'">
                 {{ reward.is_active ? "Активна" : "Скрыта" }}
               </span>
-              <span class="badge info">Остаток: {{ reward.stock }}</span>
+              <div class="stock-control">
+                <button
+                  type="button"
+                  class="stock-btn"
+                  @click="handleChangeRewardStock(reward, -1)"
+                >
+                  −
+                </button>
+
+                <span class="stock-value">
+                  Количество: {{ reward.stock ?? 0 }}
+                </span>
+
+                <button
+                  type="button"
+                  class="stock-btn"
+                  @click="handleChangeRewardStock(reward, 1)"
+                >
+                  +
+                </button>
+              </div>
 
               <button
                 class="btn danger"
@@ -2643,6 +2740,14 @@ onMounted(async () => {
               <option value="done">Выдана</option>
               <option value="rejected">Отклонена</option>
             </select>
+
+            <button
+              type="button"
+              class="danger-btn"
+              @click="handleDeleteRewardOrder(order)"
+            >
+              Удалить
+            </button>
           </div>
         </div>
 

@@ -619,62 +619,80 @@ const topVolunteers = computed(() => {
 .news-card {
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 18px;
   box-shadow: var(--shadow);
   overflow: hidden;
   height: 100%;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+  min-height: 430px;
+  display: flex;
+  flex-direction: column;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
+
 .news-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
 }
 .news-image-wrap {
   width: 100%;
-  height: 190px;
+  height: 280px;
   overflow: hidden;
-  background: #eef2f7;
+  background: #fff7ed;
+  border-bottom: 1px solid var(--border);
 }
+
 .news-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 35%;
   display: block;
 }
 .news-image-fallback {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  color: #d97706;
   font-weight: 900;
-  color: #64748b;
+  letter-spacing: .08em;
 }
 .news-body {
-  padding: 14px;
+  padding: 18px 18px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
+
 .news-head {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   align-items: flex-start;
 }
+
 .news-title {
   font-weight: 900;
-  font-size: 18px;
+  font-size: 19px;
+  line-height: 1.25;
 }
+
 .news-date {
   font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
+  padding-top: 3px;
 }
+
 .news-text {
-  margin-top: 10px;
-  color: #111827;
-  line-height: 1.5;
-}
-.news-open {
   margin-top: 12px;
+  color: #111827;
+  line-height: 1.55;
+}
+
+.news-open {
+  margin-top: auto;
+  padding-top: 16px;
   font-weight: 800;
   color: #d97706;
 }
@@ -1058,6 +1076,21 @@ const topVolunteers = computed(() => {
 
   .section-title {
     font-size: 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .news-card {
+    min-height: auto;
+  }
+
+  .news-image-wrap {
+    height: 230px;
+  }
+
+  .news-head {
+    flex-direction: column;
+    gap: 6px;
   }
 }
 </style>

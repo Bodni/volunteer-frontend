@@ -1,53 +1,52 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { api } from '../api'
-import { getAnimal } from '../services/animals'
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { api } from "../api";
+import { getAnimal } from "../services/animals";
 
+const route = useRoute();
+const animal = ref(null);
+const loading = ref(false);
+const error = ref("");
 
-const route = useRoute()
-const animal = ref(null)
-const loading = ref(false)
-const error = ref('')
-
-const apiOrigin = new URL(api.defaults.baseURL).origin
+const apiOrigin = new URL(api.defaults.baseURL).origin;
 
 const statusText = computed(() => {
-  if (!animal.value) return ''
-  if (animal.value.status === 'looking_home') return 'Ищет дом'
-  if (animal.value.status === 'treatment') return 'На лечении'
-  if (animal.value.status === 'adopted') return 'Пристроен'
-  return animal.value.status || 'Без статуса'
-})
+  if (!animal.value) return "";
+  if (animal.value.status === "looking_home") return "Ищет дом";
+  if (animal.value.status === "treatment") return "На лечении";
+  if (animal.value.status === "adopted") return "Пристроен";
+  return animal.value.status || "Без статуса";
+});
 
-const photoUrl = computed(() => getAnimalImage(animal.value?.photo))
+const photoUrl = computed(() => getAnimalImage(animal.value?.photo));
 
 function getAnimalImage(photo) {
-  const value = String(photo || '').trim()
-  if (!value) return ''
-  if (/^https?:\/\//i.test(value)) return value
-  if (value.startsWith('//')) return `http:${value}`
-  const normalized = value.startsWith('/') ? value : `/${value}`
-  return `${apiOrigin}${normalized}`
+  const value = String(photo || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("//")) return `http:${value}`;
+  const normalized = value.startsWith("/") ? value : `/${value}`;
+  return `${apiOrigin}${normalized}`;
 }
 
 async function loadAnimal() {
-  loading.value = true
-  error.value = ''
+  loading.value = true;
+  error.value = "";
 
   try {
-    animal.value = await getAnimal(route.params.id)
+    animal.value = await getAnimal(route.params.id);
   } catch (e) {
-    animal.value = null
-    error.value = 'Не удалось открыть карточку животного'
-    console.error(e)
+    animal.value = null;
+    error.value = "Не удалось открыть карточку животного";
+    console.error(e);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-onMounted(loadAnimal)
-watch(() => route.params.id, loadAnimal)
+onMounted(loadAnimal);
+watch(() => route.params.id, loadAnimal);
 </script>
 
 <template>
@@ -59,7 +58,12 @@ watch(() => route.params.id, loadAnimal)
 
     <article v-else-if="animal" class="detail-card">
       <div class="detail-media-wrap">
-        <BaseImg v-if="photoUrl" :src="photoUrl" :alt="animal.name" class="detail-image" />
+        <BaseImg
+          v-if="photoUrl"
+          :src="photoUrl"
+          :alt="animal.name"
+          class="detail-image"
+        />
         <div v-else class="detail-image detail-image-fallback">🐾</div>
       </div>
 
@@ -85,7 +89,10 @@ watch(() => route.params.id, loadAnimal)
         </div>
 
         <p class="lead">
-          {{ animal.description || 'Описание для этого животного пока не добавлено.' }}
+          {{
+            animal.description ||
+            "Описание для этого животного пока не добавлено."
+          }}
         </p>
 
         <div class="facts">
@@ -106,22 +113,22 @@ watch(() => route.params.id, loadAnimal)
         </div>
 
         <div class="actions">
-  <RouterLink
-  v-if="animal.status !== 'adopted'"
-  class="action-btn action-btn-primary"
-  :to="`/help?animal=${encodeURIComponent(animal.name)}`"
->
-  Подать заявку
-</RouterLink>
+          <RouterLink
+            v-if="animal.status !== 'adopted'"
+            class="action-btn action-btn-primary"
+            :to="`/help?tab=forms&animal=${encodeURIComponent(animal.name)}`"
+          >
+            Подать заявку
+          </RouterLink>
 
-<span v-else class="action-btn action-btn-disabled">
-  Животное уже пристроено
-</span>
+          <span v-else class="action-btn action-btn-disabled">
+            Животное уже пристроено
+          </span>
 
-  <RouterLink class="action-btn action-btn-secondary" to="/animals">
-    Назад к списку
-  </RouterLink>
-</div>
+          <RouterLink class="action-btn action-btn-secondary" to="/animals">
+            Назад к списку
+          </RouterLink>
+        </div>
       </div>
     </article>
   </section>
@@ -182,7 +189,11 @@ watch(() => route.params.id, loadAnimal)
   border-radius: 22px;
   object-fit: cover;
   display: block;
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08), rgba(15, 23, 42, 0.04));
+  background: linear-gradient(
+    180deg,
+    rgba(245, 158, 11, 0.08),
+    rgba(15, 23, 42, 0.04)
+  );
 }
 
 .detail-image-fallback {
@@ -398,127 +409,131 @@ watch(() => route.params.id, loadAnimal)
   }
 }
 
-@media (max-width: 900px){
+@media (max-width: 900px) {
   .animal-detail-card,
-  .detail-card{
-    grid-template-columns:1fr;
-    gap:18px;
+  .detail-card {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
 
   .animal-media,
   .detail-media,
   .animal-photo,
-  .detail-photo{
-    min-height:260px;
+  .detail-photo {
+    min-height: 260px;
   }
 }
 
-@media (max-width: 390px){
+@media (max-width: 390px) {
   .animal-detail-page,
-  .detail-page{
-    padding-top:20px;
-    padding-bottom:28px;
+  .detail-page {
+    padding-top: 20px;
+    padding-bottom: 28px;
   }
 
-  .back-link{
-    margin-bottom:14px;
-    font-size:14px;
+  .back-link {
+    margin-bottom: 14px;
+    font-size: 14px;
   }
 
   .animal-detail-card,
-  .detail-card{
-    padding:14px;
-    border-radius:20px;
-    gap:16px;
+  .detail-card {
+    padding: 14px;
+    border-radius: 20px;
+    gap: 16px;
   }
 
   .animal-photo,
-  .detail-photo{
-    min-height:220px;
-    height:220px;
-    border-radius:16px;
+  .detail-photo {
+    min-height: 220px;
+    height: 220px;
+    border-radius: 16px;
   }
 
-  .eyebrow{
-    font-size:11px;
+  .eyebrow {
+    font-size: 11px;
   }
 
   .title,
   .animal-title,
-  .detail-title{
-    font-size:32px;
-    line-height:1.08;
+  .detail-title {
+    font-size: 32px;
+    line-height: 1.08;
   }
 
   .meta,
-  .animal-meta{
-    gap:8px;
+  .animal-meta {
+    gap: 8px;
   }
 
   .badge,
-  .chip{
-    font-size:12px;
-    padding:7px 10px;
+  .chip {
+    font-size: 12px;
+    padding: 7px 10px;
   }
 
   .desc,
-  .description{
-    font-size:15px;
-    line-height:1.65;
+  .description {
+    font-size: 15px;
+    line-height: 1.65;
   }
 
   .actions,
-  .animal-actions{
-    display:grid;
-    grid-template-columns:1fr;
+  .animal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .actions .btn,
-  .animal-actions .btn{
-    width:100%;
+  .animal-actions .btn {
+    width: 100%;
   }
 }
 
 /* Детальная страница животного */
-.detail-media-wrap{
-  width:100%;
-  min-height:380px;
-  overflow:hidden;
-  border-radius:22px;
-  background:linear-gradient(180deg, rgba(245,158,11,.08), rgba(15,23,42,.04));
+.detail-media-wrap {
+  width: 100%;
+  min-height: 380px;
+  overflow: hidden;
+  border-radius: 22px;
+  background: linear-gradient(
+    180deg,
+    rgba(245, 158, 11, 0.08),
+    rgba(15, 23, 42, 0.04)
+  );
 }
 
-.detail-image{
-  width:100%;
-  height:100%;
-  min-height:380px;
-  object-fit:cover;
-  object-position:center 35%;
-  display:block;
-  border-radius:22px;
+.detail-image {
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  object-fit: cover;
+  object-position: center 35%;
+  display: block;
+  border-radius: 22px;
 }
 
-.detail-image-fallback{
-  width:100%;
-  height:100%;
-  min-height:380px;
+.detail-image-fallback {
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
 }
 
-@media (max-width: 920px){
+@media (max-width: 920px) {
   .detail-media-wrap,
   .detail-image,
-  .detail-image-fallback{
-    min-height:320px;
+  .detail-image-fallback {
+    min-height: 320px;
   }
 }
 
-@media (max-width: 390px){
+@media (max-width: 390px) {
   .detail-media-wrap,
   .detail-image,
-  .detail-image-fallback{
-    min-height:230px;
-    height:230px;
-    border-radius:16px;
+  .detail-image-fallback {
+    min-height: 230px;
+    height: 230px;
+    border-radius: 16px;
   }
 }
 </style>

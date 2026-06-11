@@ -4,7 +4,8 @@ import { getAnimals } from "../services/animals";
 import {
   getUsers,
   createUser,
-  deleteUser,
+  banUser,
+  unbanUser,
   resetUserPassword,
   addUserPoints,
   updateUserAvatar,
@@ -20,6 +21,7 @@ import {
   deleteDonation,
 } from "../services/donations";
 import "../assets/admin.css";
+
 const currentAdminTabLabel = computed(() => {
   const item = tabs.find((item) => item.key === tab.value);
   return item?.label || "Раздел";
@@ -437,6 +439,34 @@ const donationsPageCount = computed(() =>
   getPageCount(donationsFiltered.value),
 );
 
+async function handleToggleBanUser(user) {
+  if (user.role === 'admin') {
+    notify('Администратора нельзя заблокировать', 'error')
+    return
+  }
+
+  const willUnban = Boolean(user.is_banned)
+  const actionText = willUnban ? 'разблокировать' : 'заблокировать'
+
+  const ok = await askConfirm(`Вы действительно хотите ${actionText} пользователя ${user.name}?`)
+  if (!ok) return
+
+  try {
+    if (willUnban) {
+      await unbanUser(user.id)
+      notify('Пользователь разблокирован', 'success')
+    } else {
+      await banUser(user.id)
+      notify('Пользователь заблокирован', 'success')
+    }
+
+    await Promise.all([loadUsersData(), loadTasks()])
+  } catch (e) {
+    console.error(e)
+    notify(e?.response?.data?.message || 'Не удалось изменить статус пользователя', 'error')
+  }
+}
+
 const rewardsFiltered = computed(() => {
   let items = rewardsSorted.value;
 
@@ -597,7 +627,7 @@ async function loadCurrentUser() {
 }
 
 async function loadTabData(tabName) {
-  error.value = ""
+  error.value = "";
 
   const alreadyLoaded =
     (tabName === "users" && loadedTabs.users) ||
@@ -608,67 +638,67 @@ async function loadTabData(tabName) {
     (tabName === "news" && loadedTabs.news) ||
     (tabName === "donations" && loadedTabs.donations) ||
     (tabName === "rewards" && loadedTabs.rewards) ||
-    (tabName === "reward-orders" && loadedTabs.orders)
+    (tabName === "reward-orders" && loadedTabs.orders);
 
   if (alreadyLoaded) {
-    return
+    return;
   }
 
-  loading.value = true
+  loading.value = true;
 
   try {
     if (tabName === "users") {
-      await loadUsersData()
-      loadedTabs.users = true
+      await loadUsersData();
+      loadedTabs.users = true;
     }
 
     if (tabName === "animals") {
-      await loadAnimals()
-      loadedTabs.animals = true
+      await loadAnimals();
+      loadedTabs.animals = true;
     }
 
     if (tabName === "tasks") {
-      await loadTasks()
-      loadedTabs.tasks = true
+      await loadTasks();
+      loadedTabs.tasks = true;
     }
 
     if (tabName === "found") {
-      await loadFoundRequests()
-      loadedTabs.found = true
+      await loadFoundRequests();
+      loadedTabs.found = true;
     }
 
     if (tabName === "adoption") {
-      await loadAdoptionRequests()
-      loadedTabs.adoption = true
+      await loadAdoptionRequests();
+      loadedTabs.adoption = true;
     }
 
     if (tabName === "news") {
-      await loadNews()
-      loadedTabs.news = true
+      await loadNews();
+      loadedTabs.news = true;
     }
 
     if (tabName === "donations") {
-      await loadDonations()
-      loadedTabs.donations = true
+      await loadDonations();
+      loadedTabs.donations = true;
     }
 
     if (tabName === "rewards") {
-      await loadRewards()
-      loadedTabs.rewards = true
+      await loadRewards();
+      loadedTabs.rewards = true;
     }
 
     if (tabName === "reward-orders") {
-      await loadRewardOrders()
-      loadedTabs.orders = true
+      await loadRewardOrders();
+      loadedTabs.orders = true;
     }
   } catch (e) {
-    console.error(e)
+    console.error(e);
     error.value =
       e?.response?.data?.message ||
       e?.response?.data?.error ||
-      "Не удалось загрузить раздел."
+      "Не удалось загрузить раздел.";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -912,41 +942,75 @@ function onTaskPhotoChange(e) {
   taskPhotoFile.value = file;
   taskPhotoName.value = file.name;
 }
+function getValidationMessage(e, fallback = "Произошла ошибка") {
+  const message = e?.response?.data?.message || "";
+
+  const dictionary = {
+    "The title field is required.": "Заполни название задачи",
+    "The name field is required.": "Заполни имя",
+    "The email field is required.": "Заполни email",
+    "The password field is required.": "Заполни пароль",
+    "The city field is required.": "Заполни город",
+    "The address field is required.": "Заполни адрес",
+    "The description field is required.": "Заполни описание",
+    "The photo field must be an image.": "Файл должен быть изображением",
+    "The photo field must not be greater than 5120 kilobytes.":
+      "Размер изображения не должен превышать 5 МБ",
+  };
+
+  if (dictionary[message]) {
+    return dictionary[message];
+  }
+
+  const errors = e?.response?.data?.errors;
+
+  if (errors) {
+    const firstError = Object.values(errors)?.[0]?.[0];
+
+    if (dictionary[firstError]) {
+      return dictionary[firstError];
+    }
+
+    if (firstError) {
+      return firstError;
+    }
+  }
+
+  return message || fallback;
+}
 
 async function handleCreateTask() {
+  if (!taskForm.title.trim()) {
+    notify("Заполни название задачи", "error");
+    return;
+  }
+
   try {
     const formData = new FormData();
 
-    formData.append("title", taskForm.title || "");
-    formData.append("description", taskForm.description || "");
-    formData.append("points", taskForm.points || 10);
+    formData.append("title", taskForm.title.trim());
+    formData.append("description", taskForm.description?.trim() || "");
+    formData.append("status", taskForm.status || "open");
+    formData.append("points", String(Number(taskForm.points || 10)));
 
     if (taskForm.assigned_to) {
-      formData.append("assigned_to", taskForm.assigned_to);
+      formData.append("assigned_to", String(Number(taskForm.assigned_to)));
     }
 
-    if (taskForm.photo) {
-      formData.append("photo", taskForm.photo);
+    if (taskPhotoFile.value) {
+      formData.append("photo", taskPhotoFile.value);
     }
 
     await api.post("/tasks", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     });
 
     resetTaskForm();
+    await loadTasks();
     notify("Задача создана", "success");
-
-    try {
-      await loadTasks();
-    } catch (e) {
-      console.error(e);
-      notify("Задача создана, но список не обновился", "info");
-    }
   } catch (e) {
     console.error(e);
-    notify(e?.response?.data?.message || "Не удалось создать задачу", "error");
+    notify(getValidationMessage(e, "Не удалось создать задачу"), "error");
   }
 }
 
@@ -1201,9 +1265,9 @@ async function loadRewards() {
       page: 1,
       per_page: 30,
     },
-  })
+  });
 
-  rewards.value = asList(data)
+  rewards.value = asList(data);
 }
 
 async function loadRewardOrders() {
@@ -1275,7 +1339,7 @@ async function handleCreateReward() {
 }
 
 async function handleChangeRewardStock(reward, diff) {
-  const newStock = Math.max(0, Number(reward.stock || 0) + diff)
+  const newStock = Math.max(0, Number(reward.stock || 0) + diff);
 
   try {
     await api.put(`/rewards/${reward.id}`, {
@@ -1286,13 +1350,16 @@ async function handleChangeRewardStock(reward, diff) {
       stock: newStock,
       category: reward.category || "other",
       is_active: Boolean(reward.is_active),
-    })
+    });
 
-    reward.stock = newStock
-    notify("Количество подарков обновлено", "success")
+    reward.stock = newStock;
+    notify("Количество подарков обновлено", "success");
   } catch (e) {
-    console.error(e)
-    notify(e?.response?.data?.message || "Не удалось изменить количество", "error")
+    console.error(e);
+    notify(
+      e?.response?.data?.message || "Не удалось изменить количество",
+      "error",
+    );
   }
 }
 
@@ -1572,13 +1639,31 @@ onMounted(async () => {
               </div>
             </div>
 
-            <div v-if="u.role !== 'admin'" class="user-delete-row">
-              <button
-                class="btn danger-btn delete-user-btn"
-                @click="handleDeleteUser(u)"
+            <div class="user-ban-row">
+              <div
+                v-if="u.is_banned"
+                class="muted small"
+                style="margin-bottom: 8px"
               >
-                Удалить пользователя
+                Пользователь заблокирован и не может войти в систему
+              </div>
+
+              <button
+                v-if="u.role !== 'admin'"
+                class="btn"
+                :class="u.is_banned ? 'soft-btn' : 'danger-btn delete-user-btn'"
+                @click="handleToggleBanUser(u)"
+              >
+                {{
+                  u.is_banned
+                    ? "Разбанить пользователя"
+                    : "Забанить пользователя"
+                }}
               </button>
+
+              <div v-else class="muted small">
+                Администратора нельзя заблокировать
+              </div>
             </div>
           </div>
           <div v-if="usersPageCount > 1" class="admin-pagination item">

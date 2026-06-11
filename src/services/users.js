@@ -10,9 +10,19 @@ export async function createUser(payload) {
   return data
 }
 
-export async function deleteUser(id) {
-  const { data } = await api.delete(`/users/${id}`)
+export async function banUser(id) {
+  const { data } = await api.post(`/users/${id}/ban`)
   return data
+}
+
+export async function unbanUser(id) {
+  const { data } = await api.post(`/users/${id}/unban`)
+  return data
+}
+
+// Оставлено на всякий случай, но вместо удаления теперь бан.
+export async function deleteUser(id) {
+  return banUser(id)
 }
 
 export async function resetUserPassword(id, password) {
@@ -43,7 +53,7 @@ export async function getBestVolunteer() {
   return data
 }
 
-export async function getTopVolunteers() {
-  const { data } = await api.get('/top-volunteers')
+export async function getTopVolunteers(params = {}) {
+  const { data } = await api.get('/top-volunteers', { params })
   return data
 }

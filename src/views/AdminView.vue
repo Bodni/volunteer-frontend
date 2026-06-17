@@ -1147,7 +1147,15 @@ function requestStatusClass(status) {
   return "info";
 }
 async function loadNews() {
-  news.value = asList(await getNews());
+  const { data } = await api.get("/news", {
+    params: {
+      page: 1,
+      per_page: 1000,
+      all: 1,
+    },
+  });
+
+  news.value = asList(data);
 }
 
 async function loadDonations() {

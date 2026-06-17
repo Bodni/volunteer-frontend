@@ -196,7 +196,7 @@ const foundLoading = ref(false)
 
 async function sendFound() {
   if (!foundCity.value.trim() || !foundAddress.value.trim() || !foundDesc.value.trim()) {
-    notify('Заполни город, адрес и описание')
+    notify('Заполни город, адрес и описание', 'error')
     return
   }
 
@@ -273,7 +273,7 @@ async function sendAdopt() {
   const animalName = adoptAnimal.value.trim()
 
   if (!animalName || !adoptName.value.trim() || !adoptPhone.value.trim()) {
-    notify('Заполни: животное, имя, телефон')
+    notify('Заполни животное, имя и телефон', 'error')
     return
   }
 
@@ -1471,5 +1471,81 @@ const tasks = ref([])
   .task-card {
     min-height: auto !important;
   }
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 9999;
+  max-width: 360px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #dfe6f0;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+  font-weight: 800;
+  line-height: 1.35;
+  animation: toastIn .18s ease;
+}
+
+.toast.success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.toast.error {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #fff !important;
+  box-shadow: 0 18px 45px rgba(239, 68, 68, 0.28);
+}
+
+.toast.error * {
+  color: #fff !important;
+}
+
+.toast.info {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+@keyframes toastIn {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: none;
+  }
+}
+
+:global(.toast.error) {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 45px rgba(239, 68, 68, 0.28) !important;
+}
+
+:global(.toast.error *) {
+  color: #ffffff !important;
+}
+
+:global(.toast) {
+  font-weight: 800 !important;
 }
 </style>

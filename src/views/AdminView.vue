@@ -264,20 +264,20 @@ const volunteers = computed(() =>
   asList(users.value).filter((u) => u.role === "volunteer"),
 );
 const usersSorted = computed(() =>
-  [...asList(users.value)].sort((a, b) => a.id - b.id),
+  [...asList(users.value)].sort((a, b) => Number(b.id) - Number(a.id)),
 );
 const animalsSorted = computed(() =>
-  [...asList(animals.value)].sort((a, b) => a.id - b.id),
+  [...asList(animals.value)].sort((a, b) => Number(b.id) - Number(a.id)),
 );
 
 const tasksSorted = computed(() =>
-  [...asList(tasks.value)].sort((a, b) => a.id - b.id),
+  [...asList(tasks.value)].sort((a, b) => Number(b.id) - Number(a.id)),
 );
 const foundSorted = computed(() =>
-  [...asList(foundRequests.value)].sort((a, b) => a.id - b.id),
+  [...asList(foundRequests.value)].sort((a, b) => Number(b.id) - Number(a.id)),
 );
 const adoptionSorted = computed(() =>
-  [...asList(adoptionRequests.value)].sort((a, b) => a.id - b.id),
+  [...asList(adoptionRequests.value)].sort((a, b) => Number(b.id) - Number(a.id)),
 );
 const newsSorted = computed(() =>
   [...asList(news.value)].sort((a, b) => Number(b.id) - Number(a.id)),
